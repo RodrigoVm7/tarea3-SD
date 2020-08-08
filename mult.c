@@ -3,16 +3,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h> 
 #include <mpi.h>
-#define N 3
+#define N 5
 
 MPI_Status status;
 
 int main(int argc, char *argv[]){
-	int matriz_a[N][N] = {{4,2,4},{3,1,5},{2,5,1}};
-	int matriz_b[N][N] = {{2,1,3},{5,1,2},{5,5,1}};
+	int matriz_a[N][N];//= {{4,2,4},{3,1,5},{2,5,1}};
+	int matriz_b[N][N]; //= {{2,1,3},{5,1,2},{5,5,1}};
 	int matriz_c[N][N];
-	int num_procesos, id_proceso, num_tareas, fuente, destino, columnas, offset, i, j, k;
+	int num_procesos, id_proceso, num_tareas, fuente, destino, columnas, offset, i, j, k, l, x;
+	char c[100];
+	int llenarMatrizb=0;
+	int filasTotal=0, fil=0, col, columnasTotal;
 	struct timeval start, stop;
 
 	MPI_Init(&argc, &argv);
@@ -20,6 +24,48 @@ int main(int argc, char *argv[]){
 	MPI_Comm_size(MPI_COMM_WORLD, &num_procesos);
 
 	if(id_proceso==0){
+
+		// ****************************Lectura de los datos de las matrices A y B****************************************
+
+
+		while(fgets(c, 100, stdin) != NULL){ //leemos una linea completa a la vez hasta el final del texto para saber las dimensiones de las matrices
+			col=0;    // numero de columnas
+			k=0;
+			if (columnasTotal+1==filasTotal){ //identifica que hemos llegado a la mitad del archivo y envia el aviso
+				fil=0;			//reseteamos el valor de fila para llenar la matriz b
+				llenarMatrizb=1;  //aviso
+			}
+			while(c[k]!='\0'){        // leeamos la fila de texto que tenemos en la variable c
+				l=0;
+				char aux[4] = "";
+				while(c[k]!=' ' && c[k]!='\0'){      //hasta el espacio en blanco para diferenciar cada numero
+					aux[l]=c[k];       	// guardamos cada digito en una variable auxiliar
+					l++;
+					k++;
+				}
+				if (llenarMatrizb==1){    // recibe aviso que llegamos a la mitad del archivo por lo que los siguientes valores corresponden a la matriz b
+					matriz_b[fil][col] =atoi(aux); 	// ponemos el numero obtenido en la matriz b
+					
+				}else
+				{
+					matriz_a[fil][col] =atoi(aux); // ponemos el numero obtenido en la matriz a
+					//printf("%d\n",atoi(aux));
+				}
+				
+				if(c[k]=='\0'){  			//si encuentra el final de la linea
+					columnasTotal=col; 		// obtenemos la cantidad de columnas total de la matriz
+					fil++;
+					break;
+				}
+				col++;
+				k++;
+			}
+			filasTotal++;
+		}
+
+	
+
+	
 
 	num_tareas = num_procesos-1;
 	offset=0;
@@ -44,7 +90,7 @@ int main(int argc, char *argv[]){
 
 	for(i=0;i<N;i++){
 		for(j=0;j<N;j++){
-			printf("[%d]",matriz_c[i][j]);
+			printf("[%d]",matriz_b[i][j]);
 		}
 		printf("\n");
 	}
@@ -74,4 +120,4 @@ int main(int argc, char *argv[]){
 }
 
 // mpicc mult.c -o mult (COMPILAR)
-//mpirun -np N ./mult (EJECUTAR - N= Numero Procesos)
+//mpirun -np N ./mult < test.txt || (EJECUTAR - N= Numero Procesos)
