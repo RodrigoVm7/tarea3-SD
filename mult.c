@@ -1,11 +1,10 @@
-#include <time.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h> 
 #include <mpi.h>
-#define N 5
+#define N 3
 
 MPI_Status status;
 
@@ -17,7 +16,8 @@ int main(int argc, char *argv[]){
 	char c[100];
 	int llenarMatrizb=0;
 	int filasTotal=0, fil=0, col, columnasTotal;
-	struct timeval start, stop;
+	int maximos[N];
+	int max;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &id_proceso);
@@ -63,10 +63,6 @@ int main(int argc, char *argv[]){
 			filasTotal++;
 		}
 
-	
-
-	
-
 	num_tareas = num_procesos-1;
 	offset=0;
 
@@ -85,15 +81,33 @@ int main(int argc, char *argv[]){
 		MPI_Recv(&offset, 1, MPI_INT, fuente, 2, MPI_COMM_WORLD, &status);
 		MPI_Recv(&columnas, 1, MPI_INT, fuente, 2, MPI_COMM_WORLD, &status);
 		MPI_Recv(&matriz_c[offset][0], columnas*N, MPI_INT, fuente, 2, MPI_COMM_WORLD, &status);
+		MPI_Recv(&maximos[offset], 1, MPI_INT, fuente, 2, MPI_COMM_WORLD, &status);
 	}
 
-
+	printf("\n");
 	for(i=0;i<N;i++){
+		for(j=0;j<N;j++){
+			printf("[%d]",matriz_c[i][j]);
+		}
+		printf("\n");
+	}
+
+	printf("El maximo es: ");
+	max=maximos[0];
+	for (i=1;i<N;++i){
+		if(maximos[i]>max)
+			max=maximos[i];
+	}
+	printf("%d\n",max);
+
+	//printf("\n");
+
+	/*for(i=0;i<N;i++){
 		for(j=0;j<N;j++){
 			printf("[%d]",matriz_b[i][j]);
 		}
 		printf("\n");
-	}
+	}*/
 	}
 
 
@@ -112,9 +126,25 @@ int main(int argc, char *argv[]){
 				}
 			}
 		}
+		//printf("Hola soy el proceso %d y mi numero de columnas es: %d\n",id_proceso,columnas);
+		printf("Hola soy el proceso %d y mi numero calculo es: \n",id_proceso);
+		max=matriz_c[0][0];
+		for(k=0;k<N;k++){
+			for(i=0;i<columnas;i++){
+				printf("[%d]",matriz_c[i][k]);
+				if(matriz_c[i][k]>max){
+					max=matriz_c[i][k];
+				}
+			}
+		}
+		//printf("max: %d", max);
+		//printf("mi offset es: %d",offset);
+		//printf("mi maximo elemento es %d\n", max);
+		printf("\n");
 		MPI_Send(&offset, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
 		MPI_Send(&columnas, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
 		MPI_Send(&matriz_c, columnas*N, MPI_INT, 0, 2, MPI_COMM_WORLD);
+		MPI_Send(&max, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
 	}
 	MPI_Finalize();
 }
