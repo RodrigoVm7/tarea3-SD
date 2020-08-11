@@ -9,8 +9,8 @@
 MPI_Status status;
 
 int main(int argc, char *argv[]){
-	int matriz_a[N][N];//= {{4,2,4},{3,1,5},{2,5,1}};
-	int matriz_b[N][N]; //= {{2,1,3},{5,1,2},{5,5,1}};
+	int matriz_a[N][N];
+	int matriz_b[N][N];
 	int matriz_c[N][N];
 	int num_procesos, id_proceso, num_tareas, fuente, destino, columnas, offset, i, j, k, l, x;
 	char c[100];
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
 			}
 			while(c[k]!='\0'){        // leeamos la fila de texto que tenemos en la variable c
 				l=0;
-				char aux[4] = "";
+				char aux[10] = "";
 				while(c[k]!=' ' && c[k]!='\0'){      //hasta el espacio en blanco para diferenciar cada numero
 					aux[l]=c[k];       	// guardamos cada digito en una variable auxiliar
 					l++;
@@ -113,15 +113,31 @@ int main(int argc, char *argv[]){
 		}
 	}
 
+	//printf("Offset vale: %d\n",offset);
 	printf("Coeficiente mayor = ");
 	max=maximos[0];
-	for (i=1;i<N;++i){
+	for (i=0;i<=offset;++i){
 		if(maximos[i]>max)
 			max=maximos[i];
+		//printf("[%d]\n", maximos[i]);
 	}
+	//printf("\n");*/
 	printf("%d\n",max);
+
+	/*for (int i = 0; i < N; i++){
+		for (int j = 0; j < N; j++){
+			printf("[%d]", matriz_c[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");*/
+
+
 	
 	}
+
+
+
 
 	if(id_proceso>0){
 		fuente=0;
@@ -139,14 +155,20 @@ int main(int argc, char *argv[]){
 		}
 
 		max=matriz_c[0][0];
-
+		//printf("El maximo inicial del proceso %d es: %d\n", id_proceso, max);
 		for(k=0;k<N;k++){
 			for(i=0;i<columnas;i++){
-				if(matriz_c[k][i]>max){
-					max=matriz_c[k][i];
+				if(matriz_c[i][k]>max){
+					max=matriz_c[i][k];
 				}
+				//printf("[%d]", matriz_c[i][k]);
 			}
 		}
+		//printf("\n");
+		//printf("Soy el proceso %d y realicé un calculo\n", id_proceso);
+
+		//printf("El maximo de la fila del proceso %d es %d\n",id_proceso,max);
+		//printf("offset es %d\n", offset);
 
 		MPI_Send(&offset, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
 		MPI_Send(&columnas, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
